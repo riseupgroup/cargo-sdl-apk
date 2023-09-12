@@ -1,4 +1,5 @@
-use fs_extra::{copy_items, dir::CopyOptions, remove_items};
+use fs_extra::{copy_items, dir::CopyOptions};
+use regex::Regex;
 use std::path::Path;
 use std::process::Command;
 use std::fs::{copy, create_dir_all, read_to_string, write};
@@ -7,7 +8,8 @@ use std::collections::HashMap;
 use crate::util::*;
 use crate::BuildProfile;
 
-pub fn build_sdl_for_android(targets: &Vec<&str>, profile:BuildProfile) {
+pub fn build_sdl_for_android(manifest_path:&Path,targets: &Vec<&str>, profile:BuildProfile) {
+    let manifest_dir=manifest_path.parent().unwrap();
     let p = Path::new(&*get_env_var("ANDROID_NDK_HOME")).join("ndk-build");
 
     assert!(Command::new(p)
@@ -23,21 +25,19 @@ pub fn build_sdl_for_android(targets: &Vec<&str>, profile:BuildProfile) {
 
     for rust_name in targets {
         let android_name=get_target_android_name(rust_name);
-        let rust_dir=Path::new("target")
+        let rust_dir=manifest_dir
+            .join("target")
             .join(rust_name)
             .join(profile.to_string())
             .join("deps");
 
-        create_dir_all(rust_dir).expect("Unable to create target dir");
+        create_dir_all(&rust_dir).expect("Unable to create target dir");
         copy(
             Path::new(&*get_env_var("SDL"))
                 .join("libs")
                 .join(android_name)
                 .join("libSDL2.so"),
-            Path::new("target")
-                .join(rust_name)
-                .join(profile.to_string())
-                .join("deps/libSDL2.so")
+            rust_dir.join("libSDL2.so")
         ).expect("Unable to copy SDL dependencies");
     }
 }
@@ -80,23 +80,6 @@ fn create_android_project(
         .join("target/android-project/app/src/main/java")
         .join(str::replace(&appid, ".", "/"));
     create_dir_all(java_main_folder.clone()).unwrap();
-    let main_class = "
-		package $APP;
-
-		import org.libsdl.app.SDLActivity;
-
-		public class MainActivity extends SDLActivity {
-		}
-	";
-    let main_class = str::replace(main_class, "$APP", &appid);
-    write(java_main_folder.join("MainActivity.java"), &main_class).expect("Unable to write file");
-
-    // Change project files
-    change_android_project_file(
-        manifest_dir,
-        "app/src/main/AndroidManifest.xml",
-        vec![("SDLActivity", "MainActivity"), ("org.libsdl.app", &*appid)],
-    );
 
     change_android_project_file(
         manifest_dir,
@@ -110,11 +93,6 @@ fn create_android_project(
         vec![("Game", &*appname)],
     );
 
-    // Remove C sources
-    remove_items(&[
-        manifest_dir.join("target/android-project/app/jni/src")
-    ]).unwrap();
-
     // Link SDL into project
     if !manifest_dir.join("target/android-project/app/jni/SDL").is_dir() {
         symlink_dir(
@@ -122,6 +100,29 @@ fn create_android_project(
             manifest_dir.join("target/android-project/app/jni/SDL"),
         )
         .unwrap();
+    }
+
+    {
+        let path = manifest_dir.join("target/android-project/app/build.gradle");
+        let first = Regex::new(r"(externalNativeBuild\s\{)([^\}]*)(abiFilters)([^\}]*)(\})([^\}]*)(\})([^\}]*)(\})").unwrap();
+        let second = Regex::new(r"(externalNativeBuild\s\{)([^\}]*)(path)([^\}]*)(\})([^\}]*)(\})([^\}]*)(\})").unwrap();
+        let string = std::fs::read_to_string(&path).unwrap();
+        let mut new = first.replace(&string, r#"externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_APP_PLATFORM=android-19", "-DANDROID_STL=c++_static"
+                //abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
+            }
+        }"#);
+        let new_string = new.to_string();
+        new = second.replace(&new_string, r#"externalNativeBuild {
+            cmake {
+                path 'jni/CMakeLists.txt'
+            }
+        }"#);
+        std::fs::write(path, new.to_string()).unwrap();
+
+        change_android_project_file(manifest_dir, "app/jni/CMakeLists.txt", vec![("add_subdirectory(src)", "")])
     }
 
     // Copy libmain.so to all targets

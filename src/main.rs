@@ -99,7 +99,7 @@ fn build_android(
     	"i686-linux-android"
     ];
 
-    build_sdl_for_android(&targets,build_profile);
+    build_sdl_for_android(&manifest_path,&targets,build_profile);
     let target_artifacts=build_bin_as_lib(&manifest_path,build_target,&targets,build_profile);
     build_android_project(&manifest_path,&target_artifacts,build_profile,ks_file,ks_pass);
 }

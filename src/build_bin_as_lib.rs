@@ -14,9 +14,9 @@ use crate::BuildProfile;
 
 fn get_target_linker(rust_target_name: &str)->&str {
     match rust_target_name {
-        "aarch64-linux-android"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android26-clang",
-        "armv7-linux-androideabi"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi26-clang",
-        "i686-linux-android"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android26-clang",
+        "aarch64-linux-android"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang",
+        "armv7-linux-androideabi"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi31-clang",
+        "i686-linux-android"=>"toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android31-clang",
         _=>{panic!("Unknown target: {}",rust_target_name)}
     }
 }
