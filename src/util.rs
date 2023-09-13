@@ -1,8 +1,8 @@
 use std::env;
 use std::fs::read_to_string;
+use std::path::Path;
 use toml::value::Value;
 use toml::Table;
-use std::path::Path;
 
 pub fn get_env_var(key: &str) -> String {
     for (k, v) in env::vars() {
@@ -27,9 +27,9 @@ fn get_toml_string_rec(table: &Table, mut path: Vec<&str>) -> Option<String> {
     }
 
     let id = path.remove(0);
-	if !table.contains_key(id) {
-		return None
-	}
+    if !table.contains_key(id) {
+        return None;
+    }
 
     match table[id].clone() {
         Value::Table(t) => get_toml_string_rec(&t, path),
@@ -43,7 +43,7 @@ pub fn get_toml_string(file_name: &Path, path: Vec<&str>) -> Option<String> {
         if let Ok(f) = f {
             f.parse::<Table>().unwrap()
         } else {
-            panic!("Unable to read {}",file_name.display());
+            panic!("Unable to read {}", file_name.display());
         }
     };
 
