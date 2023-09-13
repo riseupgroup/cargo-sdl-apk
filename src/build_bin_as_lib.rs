@@ -81,7 +81,7 @@ impl Executor for LibExecutor {
             }
 
             let mut linker_arg="linker=".to_string();
-            linker_arg.push_str(&*self.linkers.get(&target_triple).unwrap());
+            linker_arg.push_str(self.linkers.get(&target_triple).unwrap());
 
             new_args.push("-C");
             new_args.push(&*linker_arg);
@@ -96,7 +96,7 @@ impl Executor for LibExecutor {
             let stdout=cmd.arg("--print").arg("file-names").exec_with_output()?;
             let stdout=String::from_utf8(stdout.stdout).unwrap();
             let stdout=stdout.lines().next().unwrap();
-            let p=Path::new(&*out_dir).join(stdout.clone());
+            let p=Path::new(&*out_dir).join(stdout);
             let p=p.into_os_string().into_string().unwrap();
 
             self.out.lock().unwrap().insert(target_triple,p);
@@ -162,7 +162,7 @@ pub fn build_bin_as_lib(
     }).collect();
 
     let compile_options=CompileOptions {
-        build_config: build_config,
+        build_config,
         cli_features: CliFeatures::new_all(false),
         spec: Packages::Packages(Vec::new()),
         filter: CompileFilter::Only {

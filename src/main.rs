@@ -17,12 +17,12 @@ pub enum BuildProfile {
     Release
 }
 
-impl BuildProfile {
-    pub fn to_string(&self)->String {
-        match self {
-            BuildProfile::Debug=>"debug".to_string(),
-            BuildProfile::Release=>"release".to_string()
-        }
+impl std::fmt::Display for BuildProfile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            BuildProfile::Debug=>"debug",
+            BuildProfile::Release=>"release",
+        })
     }
 }
 
@@ -99,9 +99,9 @@ fn build_android(
     	"i686-linux-android"
     ];
 
-    build_sdl_for_android(&manifest_path,&targets,build_profile);
-    let target_artifacts=build_bin_as_lib(&manifest_path,build_target,&targets,build_profile);
-    build_android_project(&manifest_path,&target_artifacts,build_profile,ks_file,ks_pass);
+    build_sdl_for_android(manifest_path,&targets,build_profile);
+    let target_artifacts=build_bin_as_lib(manifest_path,build_target,&targets,build_profile);
+    build_android_project(manifest_path,&target_artifacts,build_profile,ks_file,ks_pass);
 }
 
 fn run_android(
@@ -166,7 +166,7 @@ fn run_android(
 
     println!("Launched with PID: {}", pid);
 
-    assert!(Command::new(p.clone())
+    assert!(Command::new(p)
         .args(["logcat","-v","color","--pid",&*pid.to_string()])
         .status()
         .unwrap()

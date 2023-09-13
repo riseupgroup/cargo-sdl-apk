@@ -80,7 +80,7 @@ fn create_android_project(
     let java_main_folder=manifest_dir
         .join("target/android-project/app/src/main/java")
         .join(str::replace(&appid, ".", "/"));
-    create_dir_all(java_main_folder.clone()).unwrap();
+    create_dir_all(java_main_folder).unwrap();
 
     change_android_project_file(
         manifest_dir,
@@ -194,9 +194,9 @@ pub fn sign_android(
     println!("Using build-tools: {}",tools_version);
 
     // Determine key file. Generate if needed.
-    let (key_file,key_pass)=if ks_file.is_some() {
+    let (key_file,key_pass)=if let Some(ks_file) = ks_file {
         (
-            ks_file.unwrap(),
+            ks_file,
             ks_pass.expect("Need keystore password")
         )
     } else {
@@ -239,7 +239,7 @@ pub fn sign_android(
 
     // Run apksigner
     let apksigner_path=Path::new(&*get_env_var("ANDROID_HOME"))
-        .join("build-tools").join(tools_version.clone()).join("apksigner");
+        .join("build-tools").join(tools_version).join("apksigner");
 
     assert!(Command::new(apksigner_path)
         .arg("sign")
