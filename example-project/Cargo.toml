@@ -3,6 +3,10 @@ name = "example-project"
 version = "0.1.0"
 edition = "2021"
 
+[package.metadata.android]
+title = "Example Project"
+package_name = "com.example.example-project"
+
 [dependencies]
 gl = "0.14.0"
 sdl2 = "0.35.2"

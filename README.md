@@ -24,6 +24,4 @@ and [cargo-quad-apk](https://crates.io/crates/cargo-quad-apk) is for [Miniquad](
 
 ## Project setup
 
-The entry point for your application must be called `SDL_main` and use the attribute `#[no_mangle]`. Here is
-an [example project](https://github.com/limikael/cargo-sdl-apk/tree/master/example-project). To build/run the
-project, cd into it and run `cargo sdl-apk build` or `cargo sdl-apk run`.
+The entry point for your application must be called `SDL_main` and use the attribute `#[no_mangle]`. Here is an [example project](https://github.com/limikael/cargo-sdl-apk/tree/master/example-project). To build/run the project, cd into it and run `cargo sdl-apk build` or `cargo sdl-apk run`.
