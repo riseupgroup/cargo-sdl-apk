@@ -1,4 +1,5 @@
 use fs_extra::{copy_items, dir::CopyOptions};
+use image::imageops::{resize, FilterType};
 use regex::Regex;
 use std::path::Path;
 use std::process::Command;
@@ -139,6 +140,17 @@ fn create_android_project(
             artifact,
             android_dir.join("libmain.so")
         ).unwrap();
+    }
+
+    if let Some(icon)=get_toml_string(manifest_path,
+        vec!["package","metadata","android","icon"]
+    ) {
+        let image = image::open(manifest_dir.join(icon)).unwrap();
+        let res_dir = manifest_dir.join("target/android-project/app/src/main/res");
+        for (res, size) in [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)] {
+            let img = resize(&image, size, size, FilterType::Gaussian);
+            img.save(res_dir.join(format!("mipmap-{res}/ic_launcher.png"))).unwrap();
+        }
     }
 }
 

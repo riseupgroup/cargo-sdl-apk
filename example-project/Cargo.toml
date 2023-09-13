@@ -5,7 +5,8 @@ edition = "2021"
 
 [package.metadata.android]
 title = "Example Project"
-package_name = "com.example.example-project"
+package_name = "com.example.example_project"
+icon = "icon.png"
 
 [dependencies]
 gl = "0.14.0"
