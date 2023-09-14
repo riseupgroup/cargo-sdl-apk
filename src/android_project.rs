@@ -181,6 +181,8 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
                 .unwrap();
         }
     }
+
+    std::fs::remove_dir_all(manifest_dir.join("target/android-project/app/build/outputs/apk")).unwrap();
 }
 
 fn change_android_project_file(
