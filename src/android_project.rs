@@ -90,7 +90,7 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
     change_android_project_file(
         manifest_dir,
         "app/build.gradle",
-        vec![("org.libsdl.app", &*appid)],
+        vec![("org.libsdl.app", &*appid), ("minSdkVersion 16", "minSdkVersion 26")],
     );
 
     change_android_project_file(
@@ -163,26 +163,93 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
         copy(artifact, android_dir.join("libmain.so")).unwrap();
     }
 
-    if let Some(icon) = get_toml_string(
-        manifest_path,
-        vec!["package", "metadata", "android", "icon"],
-    ) {
-        let image = image::open(manifest_dir.join(icon)).unwrap();
-        let res_dir = manifest_dir.join("target/android-project/app/src/main/res");
-        for (res, size) in [
-            ("mdpi", 48),
-            ("hdpi", 72),
-            ("xhdpi", 96),
-            ("xxhdpi", 144),
-            ("xxxhdpi", 192),
-        ] {
-            let img = resize(&image, size, size, FilterType::Gaussian);
-            img.save(res_dir.join(format!("mipmap-{res}/ic_launcher.png")))
-                .unwrap();
+
+    {
+        let icon = get_toml_string(
+            manifest_path,
+            vec!["package", "metadata", "android", "icon"],
+        );
+        let adaptive_icon_foreground = get_toml_string(
+            manifest_path,
+            vec!["package", "metadata", "android", "adaptive_icon_foreground"],
+        );
+        let adaptive_icon_background = get_toml_string(
+            manifest_path,
+            vec!["package", "metadata", "android", "adaptive_icon_background"],
+        );
+        let adaptive_icon_monochrome = get_toml_string(
+            manifest_path,
+            vec!["package", "metadata", "android", "adaptive_icon_monochrome"],
+        );
+        if (adaptive_icon_foreground.is_some() || adaptive_icon_background.is_some() || adaptive_icon_monochrome.is_some()) && icon.is_some() {
+            panic!("You can only specify an icon OR an adaptive icon");
+        }
+        {
+            let res_dir = manifest_dir.join("target/android-project/app/src/main/res");
+            let versions = [
+                ("mdpi", 48),
+                ("hdpi", 72),
+                ("xhdpi", 96),
+                ("xxhdpi", 144),
+                ("xxxhdpi", 192),
+            ];
+            if let Some(icon) = icon {
+                let image = image::open(manifest_dir.join(icon)).unwrap();
+
+                for (res, size) in versions {
+                    let dir = res_dir.join(format!("mipmap-{res}"));
+                    std::fs::remove_dir_all(&dir).unwrap();
+                    std::fs::create_dir_all(&dir).unwrap();
+                    let img = resize(&image, size, size, FilterType::Gaussian);
+                    img.save(dir.join("ic_launcher.png")).unwrap();
+                }
+            }
+
+            if adaptive_icon_foreground.is_some() || adaptive_icon_background.is_some() || adaptive_icon_monochrome.is_some() {
+
+                let image_foreground = adaptive_icon_foreground.map(|path| image::open(manifest_dir.join(path)).unwrap());
+                let image_background = adaptive_icon_background.map(|path| image::open(manifest_dir.join(path)).unwrap());
+                let image_monochrome = adaptive_icon_monochrome.map(|path| image::open(manifest_dir.join(path)).unwrap());
+
+                for (res, size) in versions {
+                    let dir = res_dir.join(format!("mipmap-{res}"));
+                    std::fs::remove_dir_all(&dir).unwrap();
+                    std::fs::create_dir_all(&dir).unwrap();
+                    let foreground = image_foreground.as_ref().map(|image| resize(image, size, size, FilterType::Gaussian));
+                    let background = image_background.as_ref().map(|image| resize(image, size, size, FilterType::Gaussian));
+                    let monochrome = image_monochrome.as_ref().map(|image| resize(image, size, size, FilterType::Gaussian));
+
+                    if let Some(image) = foreground {
+                        image.save(dir.join("ic_launcher_foreground.png")).unwrap();
+                    }
+                    if let Some(image) = background {
+                        image.save(dir.join("ic_launcher_background.png")).unwrap();
+                    }
+                    if let Some(image) = monochrome {
+                        image.save(dir.join("ic_launcher_monochrome.png")).unwrap();
+                    }
+
+                    let mut xml = String::from(r#"<?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">"#);
+                    if image_foreground.is_some() {
+                        xml += r#"<foreground android:drawable="@mipmap/ic_launcher_foreground" />"#;
+                    }
+                    if image_background.is_some() {
+                        xml += r#"<background android:drawable="@mipmap/ic_launcher_background" />"#;
+                    }
+                    if image_monochrome.is_some() {
+                        xml += r#"<monochrome android:drawable="@mipmap/ic_launcher_monochrome" />"#;
+                    }
+                    xml += r#"</adaptive-icon>"#;
+                    std::fs::write(dir.join("ic_launcher.xml"), xml).unwrap();
+                }
+            }
         }
     }
 
-    std::fs::remove_dir_all(manifest_dir.join("target/android-project/app/build/outputs/apk")).unwrap();
+    let apk_output_dir = manifest_dir.join("target/android-project/app/build/outputs/apk");
+    if apk_output_dir.exists() {
+        std::fs::remove_dir_all(apk_output_dir).unwrap();
+    }
 }
 
 fn change_android_project_file(
