@@ -22,6 +22,7 @@ fn get_toml_string_rec(table: &Table, mut path: Vec<&str>) -> Option<String> {
 
         return match table[path[0]].clone() {
             Value::String(s) => Some(s),
+            Value::Boolean(b) => if b {Some(String::from("true"))} else {Some(String::from("false"))}
             _ => None,
         };
     }

@@ -77,7 +77,7 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
     copy_items(
         &[Path::new(&*get_env_var("SDL")).join("android-project")],
         Path::new(manifest_dir).join("target"),
-        &CopyOptions::new().skip_exist(true),
+        &CopyOptions::new().skip_exist(false).overwrite(true),
     )
     .unwrap();
 
@@ -98,6 +98,21 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
         "app/src/main/res/values/strings.xml",
         vec![("Game", &*appname)],
     );
+
+    if let Some(val) = get_toml_string(
+        manifest_path,
+        vec!["package", "metadata", "android", "improve_fullscreen"],
+    ) {
+        println!("{val}");
+        if val == "true" {
+            change_android_project_file(
+                manifest_dir,
+                "app/src/main/java/org/libsdl/app/SDLActivity.java",
+                vec![("setContentView(mLayout);", r#"mLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                setContentView(mLayout);"#)],
+            );
+        }
+    }
 
     // Link SDL into project
     if !manifest_dir

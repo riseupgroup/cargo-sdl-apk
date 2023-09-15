@@ -30,5 +30,6 @@ icon = "icon.png"
 adaptive_icon_foreground = "icon_foreground.png"
 adaptive_icon_background = "icon_background.png"
 adaptive_icon_monochrome = "icon_monochrome.png"
+improve_fullscreen = true
 ```
 
