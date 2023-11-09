@@ -7,7 +7,7 @@ This cargo tool aims to be for [Rust SDL](https://docs.rs/sdl2/latest/sdl2/) wha
 
 1. Make sure you have the following:
    * The SDL source, clone it from [here](https://github.com/libsdl-org/SDL). Make sure you have the `release-2.26.x` branch.
-   * Java. (jdk17 - jdk19)
+   * Java: jdk17
    * Android SDK with command line tools.
    * Android NDK.
 2. Set the environment variables:
