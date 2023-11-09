@@ -154,7 +154,10 @@ pub fn build_bin_as_lib(
     let mut build_config =
         BuildConfig::new(&cargo_config, None, false, &[], CompileMode::Build).unwrap();
 
-    build_config.requested_profile = profile.to_string().into();
+    build_config.requested_profile = match profile {
+        BuildProfile::Release => "release",
+        BuildProfile::Debug => "dev",
+    }.into();
 
     build_config.requested_kinds = targets
         .iter()
