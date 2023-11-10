@@ -103,7 +103,6 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
         manifest_path,
         vec!["package", "metadata", "android", "improve_fullscreen"],
     ) {
-        println!("{val}");
         if val == "true" {
             change_android_project_file(
                 manifest_dir,
@@ -168,7 +167,6 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
     // Copy libmain.so to all targets
     for (target, artifact) in target_artifacts {
         let target_android_name = get_target_android_name(target);
-        //println!("{:?}",target);
 
         let android_dir = manifest_dir
             .join("target/android-project/app/src/main/jniLibs")
@@ -283,8 +281,6 @@ fn change_android_project_file(
         content = content.replace(from, to);
     }
 
-    //println!("{:?}",manifest_dir.join("target/android-project").join(file_name));
-
     write(
         manifest_dir.join("target/android-project").join(file_name),
         &content,
@@ -295,7 +291,6 @@ fn change_android_project_file(
 pub fn sign_android(manifest_path: &Path, ks_file: Option<String>, ks_pass: Option<String>) {
     let manifest_dir = manifest_path.parent().unwrap();
     let release_dir = manifest_dir.join("target/android-project/app/build/outputs/apk/release");
-    //println!("{:?}",release_dir);
 
     // Find android build tools.
     let tool_paths =

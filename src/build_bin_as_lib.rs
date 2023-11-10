@@ -88,7 +88,8 @@ impl Executor for LibExecutor {
             new_args.push("-C");
             new_args.push(&*linker_arg);
 
-            //println!("the new args: {:?}",new_args.join(" "));
+            new_args.push("--cfg");
+            new_args.push("mobile");
 
             let mut cmd = cmd.clone();
             cmd.args_replace(&new_args);
