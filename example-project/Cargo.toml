@@ -6,6 +6,7 @@ edition = "2021"
 [package.metadata.android]
 title = "Example Project"
 package_name = "com.example.example_project"
+permissions = ["INTERNET"]
 icon = "icon.png"
 
 [dependencies]

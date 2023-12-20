@@ -25,6 +25,7 @@ The entry point for your application must be called `SDL_main` and use the attri
 ```toml
 title = "Example Project"
 package_name = "com.example.example_project"
+permissions = ["INTERNET"]
 # You can specify an icon OR an adaptive icon
 icon = "icon.png"
 adaptive_icon_foreground = "icon_foreground.png"

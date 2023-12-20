@@ -63,6 +63,14 @@ pub fn get_android_app_id(manifest_path: &Path) -> String {
     .unwrap_or("org.libsdl.app".to_string())
 }
 
+fn use_permission(manifest_dir: &Path, permission: &str) {
+    change_android_project_file(
+        manifest_dir,
+        "app/src/main/AndroidManifest.xml",
+        vec![("<application android:label=\"@string/app_name\"", format!("<uses-permission android:name=\"android.permission.{permission}\" />\n\t<application android:label=\"@string/app_name\"").as_str())],
+    );
+}
+
 fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<String, String>) {
     let manifest_dir = manifest_path.parent().unwrap();
     let appid = get_android_app_id(manifest_path);
@@ -256,6 +264,12 @@ fn create_android_project(manifest_path: &Path, target_artifacts: &HashMap<Strin
                     std::fs::write(dir.join("ic_launcher.xml"), xml).unwrap();
                 }
             }
+        }
+    }
+
+    if let Some(permissions) = get_toml_string_array(manifest_path, vec!["package", "metadata", "android", "permissions"]) {
+        for permission in permissions {
+            use_permission(manifest_dir, &permission);
         }
     }
 
